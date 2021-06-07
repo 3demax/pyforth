@@ -1,8 +1,8 @@
 from unittest import TestCase, expectedFailure
 
-from nanoforth import (
+from sectorforth import (
     Context, Stack,
-    init, compile, execute, interpret,
+    init, compile, execute, interpret, interpret_line,
     NATIVE_WORD, USER_WORD
 )
 
@@ -13,6 +13,13 @@ class ContextCase(TestCase):
         init(self.context)
 
 
+class ContextCaseTest(ContextCase):
+    def test_stacks_empty(self):
+        ctx = self.context
+        self.assertEqual([], ctx.PS.list())
+        self.assertEqual([], ctx.RS.list())
+
+
 class ExecutorTest(ContextCase):
     def test_execute(self):
         self.context.PS.append(1)
@@ -21,7 +28,7 @@ class ExecutorTest(ContextCase):
         self.assertTrue(ret)
         stack = Stack()
         stack.push(3)
-        self.assertEqual(self.context.PS.items[:1], stack.items[:1])
+        self.assertEqual(3, stack.pop())
 
 
 class InterpreterTest(ContextCase):
@@ -31,8 +38,7 @@ class InterpreterTest(ContextCase):
 
     def test_compile(self):
         line = ': 2+ 2 + ;'
-        res = interpret(line, self.context)
-        print(self.context.DICT)
+        res = interpret_line(line, self.context)
         self.assertTrue('2+' in self.context.DICT.keys())
         self.assertEqual(self.context.DICT['2+'], (USER_WORD, ['2', '+']))
 
@@ -42,7 +48,6 @@ class CompilerTest(ContextCase):
         line = ': 2+ 2 + ;'
         pos, res = compile(line, self.context)
         self.assertTrue('2+' in self.context.DICT.keys())
-        print(self.context.DICT)
         self.assertEqual(self.context.DICT['2+'], (USER_WORD, ['2', '+']))
         self.assertEqual(
             (10, True), (pos, res)
